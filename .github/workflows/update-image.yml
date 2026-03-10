@@ -12,11 +12,6 @@ on:
         description: 'Target version to build'
         required: false
         type: string
-      publish_to_store:
-        description: 'Publish to store after build'
-        required: false
-        default: 'false'
-        type: boolean
 
 jobs:
   update-image:
@@ -50,13 +45,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Login to LazyCat Registry
-        uses: docker/login-action@v3
-        with:
-          registry: registry.lazycat.cloud
-          username: ${{ secrets.LAZYCAT_REGISTRY_USER }}
-          password: ${{ secrets.LAZYCAT_REGISTRY_PASSWORD }}
-
       - name: Pull and tag image
         run: |
           VERSION=${{ steps.version.outputs.version }}
@@ -68,31 +56,9 @@ jobs:
           docker tag apache/airflow:${VERSION} ghcr.io/${{ github.repository }}:${VERSION}
           docker tag apache/airflow:${VERSION} ghcr.io/${{ github.repository }}:latest
           
-          # Tag for LazyCat Registry
-          docker tag apache/airflow:${VERSION} registry.lazycat.cloud/apache/airflow:${VERSION}
-          docker tag apache/airflow:${VERSION} registry.lazycat.cloud/apache/airflow:latest
-          
-          # Push to GHCR
+          # Push to GHCR only
           docker push ghcr.io/${{ github.repository }}:${VERSION}
           docker push ghcr.io/${{ github.repository }}:latest
-          
-          # Push to LazyCat Registry
-          docker push registry.lazycat.cloud/apache/airflow:${VERSION}
-          docker push registry.lazycat.cloud/apache/airflow:latest
-
-      - name: Update manifest version
-        run: |
-          VERSION=${{ steps.version.outputs.version }}
-          sed -i "s/^version: .*/version: ${VERSION}/" lzc-manifest.yml
-          sed -i "s|image: registry.lazycat.cloud/apache/airflow:.*|image: registry.lazycat.cloud/apache/airflow:${VERSION}|g" lzc-manifest.yml
-
-      - name: Commit changes
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add lzc-manifest.yml
-          git diff --quiet && git diff --staged --quiet || git commit -m "chore: update to version ${{ steps.version.outputs.version }}"
-          git push
 
       - name: Output metadata
         run: |
