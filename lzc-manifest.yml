@@ -24,7 +24,7 @@ application:
     - AIRFLOW_UID=50000
 services:
   airflow-api-server:
-    image: registry.lazycat.cloud/apache/airflow:3.1.7
+    image: registry.lazycat.cloud/invokerlaw/codeeagle/airflow:596efed1396b4ee5
     depends_on:
       - postgres
       - redis
@@ -50,7 +50,7 @@ services:
       retries: 5
 
   airflow-scheduler:
-    image: registry.lazycat.cloud/apache/airflow:3.1.7
+    image: registry.lazycat.cloud/invokerlaw/codeeagle/airflow:596efed1396b4ee5
     depends_on:
       - postgres
       - redis
@@ -76,7 +76,7 @@ services:
       retries: 5
 
   airflow-worker:
-    image: registry.lazycat.cloud/apache/airflow:3.1.7
+    image: registry.lazycat.cloud/invokerlaw/codeeagle/airflow:596efed1396b4ee5
     depends_on:
       - postgres
       - redis
@@ -103,7 +103,7 @@ services:
       retries: 5
 
   postgres:
-    image: registry.lazycat.cloud/library/postgres:16-alpine
+    image: registry.lazycat.cloud/invokerlaw/library/postgres:16-alpine
     environment:
       - POSTGRES_USER=airflow
       - POSTGRES_PASSWORD=airflow
@@ -117,7 +117,7 @@ services:
       retries: 5
 
   redis:
-    image: registry.lazycat.cloud/library/redis:7-alpine
+    image: registry.lazycat.cloud/invokerlaw/library/redis:160a706bce934011
     binds:
       - /lzcapp/var/data/airflow/redis:/data
     command: redis-server --appendonly yes
