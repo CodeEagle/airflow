@@ -42,7 +42,7 @@ services:
       - /lzcapp/var/data/airflow/logs:/opt/airflow/logs
       - /lzcapp/var/data/airflow/plugins:/opt/airflow/plugins
       - /lzcapp/var/data/airflow/config:/opt/airflow/config
-    command: "/bin/bash -c 'for i in 1 2 3 4 5 6 7 8 9 10; do pg_isready -h postgres -p 5432 -U airflow 2>/dev/null && echo PostgreSQL is ready && break; sleep 3; done; airflow db migrate && airflow users create --username airflow --password airflow --firstname Airflow --lastname Admin --role Admin --email airflow@example.com || true; airflow api-server'"
+    command: ["sh", "-c", "for i in 1 2 3 4 5 6 7 8 9 10; do pg_isready -h postgres -p 5432 -U airflow 2>/dev/null && echo PostgreSQL is ready && break; sleep 3; done; airflow db migrate && airflow users create --username airflow --password airflow --firstname Airflow --lastname Admin --role Admin --email airflow@example.com || true; exec airflow api-server"]
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8080/health"]
       interval: 30s
@@ -68,7 +68,7 @@ services:
       - /lzcapp/var/data/airflow/logs:/opt/airflow/logs
       - /lzcapp/var/data/airflow/plugins:/opt/airflow/plugins
       - /lzcapp/var/data/airflow/config:/opt/airflow/config
-    command: "/bin/bash -c 'for i in 1 2 3 4 5 6 7 8 9 10; do pg_isready -h postgres -p 5432 -U airflow 2>/dev/null && echo PostgreSQL is ready && break; sleep 3; done; airflow scheduler'"
+    command: ["sh", "-c", "for i in 1 2 3 4 5 6 7 8 9 10; do pg_isready -h postgres -p 5432 -U airflow 2>/dev/null && echo PostgreSQL is ready && break; sleep 3; done; exec airflow scheduler"]
     healthcheck:
       test: ["CMD-SHELL", "airflow jobs check --job-type SchedulerJob"]
       interval: 30s
@@ -95,7 +95,7 @@ services:
       - /lzcapp/var/data/airflow/logs:/opt/airflow/logs
       - /lzcapp/var/data/airflow/plugins:/opt/airflow/plugins
       - /lzcapp/var/data/airflow/config:/opt/airflow/config
-    command: "/bin/bash -c 'for i in 1 2 3 4 5 6 7 8 9 10; do pg_isready -h postgres -p 5432 -U airflow 2>/dev/null && echo PostgreSQL is ready && break; sleep 3; done; airflow celery worker'"
+    command: ["sh", "-c", "for i in 1 2 3 4 5 6 7 8 9 10; do pg_isready -h postgres -p 5432 -U airflow 2>/dev/null && echo PostgreSQL is ready && break; sleep 3; done; exec airflow celery worker"]
     healthcheck:
       test: ["CMD-SHELL", "celery --app airflow.providers.celery.executors.celery_executor.app inspect ping -d 'celery@$HOSTNAME'"]
       interval: 30s
@@ -103,7 +103,7 @@ services:
       retries: 5
 
   postgres:
-    image: registry.lazycat.cloud/invokerlaw/library/postgres:16-alpine
+    image: registry.lazycat.cloud/invokerlaw/library/postgres:c7066f661fdb4a89
     environment:
       - POSTGRES_USER=airflow
       - POSTGRES_PASSWORD=airflow
