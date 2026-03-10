@@ -48,17 +48,19 @@ jobs:
       - name: Pull and tag image
         run: |
           VERSION=${{ steps.version.outputs.version }}
+          # Convert to lowercase for ghcr.io
+          GHCR_REPO=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           
           # Pull official image
           docker pull apache/airflow:${VERSION}
           
           # Tag for GHCR
-          docker tag apache/airflow:${VERSION} ghcr.io/${{ github.repository }}:${VERSION}
-          docker tag apache/airflow:${VERSION} ghcr.io/${{ github.repository }}:latest
+          docker tag apache/airflow:${VERSION} ghcr.io/${GHCR_REPO}:${VERSION}
+          docker tag apache/airflow:${VERSION} ghcr.io/${GHCR_REPO}:latest
           
           # Push to GHCR only
-          docker push ghcr.io/${{ github.repository }}:${VERSION}
-          docker push ghcr.io/${{ github.repository }}:latest
+          docker push ghcr.io/${GHCR_REPO}:${VERSION}
+          docker push ghcr.io/${GHCR_REPO}:latest
 
       - name: Output metadata
         run: |
