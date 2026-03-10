@@ -1,0 +1,136 @@
+lzc-sdk-version: '0.1'
+package: fun.selfstudio.app.migration.airflow
+version: 3.1.7
+min_os_version: 1.3.8
+name: Apache Airflow
+description: A platform to programmatically author, schedule, and monitor workflows
+license: Apache-2.0
+homepage: https://airflow.apache.org/
+author: Apache Software Foundation
+application:
+  subdomain: airflow
+  public_path:
+    - /
+  upstreams:
+    - location: /
+      backend: http://airflow-api-server:8080/
+  environment:
+    - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
+    - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+    - AIRFLOW__CELERY__RESULT_BACKEND=db+postgresql://airflow:airflow@postgres:5432/airflow
+    - AIRFLOW__CELERY__BROKER_URL=redis://:@redis:6379/0
+    - AIRFLOW__CORE__FERNET_KEY=${AIRFLOW__CORE__FERNET_KEY}
+    - AIRFLOW__WEBSERVER__SECRET_KEY=${AIRFLOW__WEBSERVER__SECRET_KEY}
+    - AIRFLOW_UID=50000
+services:
+  postgres:
+    image: registry.lazycat.cloud/library/postgres:16-alpine
+    environment:
+      - POSTGRES_USER=airflow
+      - POSTGRES_PASSWORD=airflow
+      - POSTGRES_DB=airflow
+    binds:
+      - /lzcapp/var/db/airflow/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow -d airflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: registry.lazycat.cloud/library/redis:7-alpine
+    binds:
+      - /lzcapp/var/data/airflow/redis:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  airflow-scheduler:
+    image: registry.lazycat.cloud/apache/airflow:3.1.7
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      - AIRFLOW__CELERY__RESULT_BACKEND=db+postgresql://airflow:airflow@postgres:5432/airflow
+      - AIRFLOW__CELERY__BROKER_URL=redis://:@redis:6379/0
+      - AIRFLOW__CORE__FERNET_KEY=${AIRFLOW__CORE__FERNET_KEY}
+      - AIRFLOW__WEBSERVER__SECRET_KEY=${AIRFLOW__WEBSERVER__SECRET_KEY}
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW_UID=50000
+    binds:
+      - /lzcapp/var/data/airflow/dags:/opt/airflow/dags
+      - /lzcapp/var/data/airflow/logs:/opt/airflow/logs
+      - /lzcapp/var/data/airflow/plugins:/opt/airflow/plugins
+      - /lzcapp/var/data/airflow/config:/opt/airflow/config
+    command: "/bin/bash -c 'for i in 1 2 3 4 5 6 7 8 9 10; do pg_isready -h postgres -p 5432 -U airflow 2>/dev/null && echo PostgreSQL is ready && break; sleep 3; done; airflow scheduler'"
+    healthcheck:
+      test: ["CMD-SHELL", "airflow jobs check --job-type SchedulerJob"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  airflow-worker:
+    image: registry.lazycat.cloud/apache/airflow:3.1.7
+    depends_on:
+      - postgres
+      - redis
+      - airflow-scheduler
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      - AIRFLOW__CELERY__RESULT_BACKEND=db+postgresql://airflow:airflow@postgres:5432/airflow
+      - AIRFLOW__CELERY__BROKER_URL=redis://:@redis:6379/0
+      - AIRFLOW__CORE__FERNET_KEY=${AIRFLOW__CORE__FERNET_KEY}
+      - AIRFLOW__WEBSERVER__SECRET_KEY=${AIRFLOW__WEBSERVER__SECRET_KEY}
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW_UID=50000
+    binds:
+      - /lzcapp/var/data/airflow/dags:/opt/airflow/dags
+      - /lzcapp/var/data/airflow/logs:/opt/airflow/logs
+      - /lzcapp/var/data/airflow/plugins:/opt/airflow/plugins
+      - /lzcapp/var/data/airflow/config:/opt/airflow/config
+    command: "/bin/bash -c 'for i in 1 2 3 4 5 6 7 8 9 10; do pg_isready -h postgres -p 5432 -U airflow 2>/dev/null && echo PostgreSQL is ready && break; sleep 3; done; airflow celery worker'"
+    healthcheck:
+      test: ["CMD-SHELL", "celery --app airflow.providers.celery.executors.celery_executor.app inspect ping -d 'celery@$HOSTNAME'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  airflow-api-server:
+    image: registry.lazycat.cloud/apache/airflow:3.1.7
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=CeleryExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+      - AIRFLOW__CELERY__RESULT_BACKEND=db+postgresql://airflow:airflow@postgres:5432/airflow
+      - AIRFLOW__CELERY__BROKER_URL=redis://:@redis:6379/0
+      - AIRFLOW__CORE__FERNET_KEY=${AIRFLOW__CORE__FERNET_KEY}
+      - AIRFLOW__WEBSERVER__SECRET_KEY=${AIRFLOW__WEBSERVER__SECRET_KEY}
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW_UID=50000
+    binds:
+      - /lzcapp/var/data/airflow/dags:/opt/airflow/dags
+      - /lzcapp/var/data/airflow/logs:/opt/airflow/logs
+      - /lzcapp/var/data/airflow/plugins:/opt/airflow/plugins
+      - /lzcapp/var/data/airflow/config:/opt/airflow/config
+    command: "/bin/bash -c 'for i in 1 2 3 4 5 6 7 8 9 10; do pg_isready -h postgres -p 5432 -U airflow 2>/dev/null && echo PostgreSQL is ready && break; sleep 3; done; airflow db migrate && airflow users create --username airflow --password airflow --firstname Airflow --lastname Admin --role Admin --email airflow@example.com || true; airflow api-server'"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+locales:
+  en:
+    name: Apache Airflow
+    description: A platform to programmatically author, schedule, and monitor workflows
+  zh:
+    name: Apache Airflow
+    description: 以编程方式编写、调度和监控工作流的平台
