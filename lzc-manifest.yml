@@ -42,9 +42,9 @@ services:
       - /lzcapp/var/data/airflow/logs:/opt/airflow/logs
       - /lzcapp/var/data/airflow/plugins:/opt/airflow/plugins
       - /lzcapp/var/data/airflow/config:/opt/airflow/config
-    command: ["sh", "-c", "for i in 1 2 3 4 5 6 7 8 9 10; do pg_isready -h postgres -p 5432 -U airflow 2>/dev/null && echo PostgreSQL is ready && break; sleep 3; done; airflow db migrate && airflow users create --username airflow --password airflow --firstname Airflow --lastname Admin --role Admin --email airflow@example.com || true; exec airflow api-server"]
+    command: "airflow standalone"
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/health"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/api/v2/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -68,7 +68,7 @@ services:
       - /lzcapp/var/data/airflow/logs:/opt/airflow/logs
       - /lzcapp/var/data/airflow/plugins:/opt/airflow/plugins
       - /lzcapp/var/data/airflow/config:/opt/airflow/config
-    command: ["sh", "-c", "for i in 1 2 3 4 5 6 7 8 9 10; do pg_isready -h postgres -p 5432 -U airflow 2>/dev/null && echo PostgreSQL is ready && break; sleep 3; done; exec airflow scheduler"]
+    command: "airflow scheduler"
     healthcheck:
       test: ["CMD-SHELL", "airflow jobs check --job-type SchedulerJob"]
       interval: 30s
@@ -95,7 +95,7 @@ services:
       - /lzcapp/var/data/airflow/logs:/opt/airflow/logs
       - /lzcapp/var/data/airflow/plugins:/opt/airflow/plugins
       - /lzcapp/var/data/airflow/config:/opt/airflow/config
-    command: ["sh", "-c", "for i in 1 2 3 4 5 6 7 8 9 10; do pg_isready -h postgres -p 5432 -U airflow 2>/dev/null && echo PostgreSQL is ready && break; sleep 3; done; exec airflow celery worker"]
+    command: "airflow celery worker"
     healthcheck:
       test: ["CMD-SHELL", "celery --app airflow.providers.celery.executors.celery_executor.app inspect ping -d 'celery@$HOSTNAME'"]
       interval: 30s
