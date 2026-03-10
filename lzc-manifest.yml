@@ -3,7 +3,7 @@ package: fun.selfstudio.app.migration.airflow
 version: 3.1.7
 min_os_version: 1.3.8
 name: Apache Airflow
-description: A platform to programmatically author, schedule, and monitor workflows
+description: (LazyCat Auto-build) A platform to programmatically author, schedule, and monitor workflows
 license: Apache-2.0
 homepage: https://airflow.apache.org/
 author: Apache Software Foundation
@@ -130,7 +130,7 @@ services:
 locales:
   en:
     name: Apache Airflow
-    description: A platform to programmatically author, schedule, and monitor workflows
+    description: (LazyCat Auto-build) A platform to programmatically author, schedule, and monitor workflows
   zh:
     name: Apache Airflow
-    description: 以编程方式编写、调度和监控工作流的平台
+    description: （懒猫微服自动构建）以编程方式编写、调度和监控工作流的平台

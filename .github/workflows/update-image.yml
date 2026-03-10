@@ -11,7 +11,15 @@ on:
       target_version:
         description: 'Target version to build'
         required: false
+        default: ''
         type: string
+      publish_to_store:
+        description: 'Reserved for lzcat-trigger compatibility'
+        required: false
+        default: false
+        type: boolean
+  schedule:
+    - cron: '0 */6 * * *'
 
 jobs:
   update-image:
