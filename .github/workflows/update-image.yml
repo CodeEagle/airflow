@@ -25,7 +25,7 @@ jobs:
   update-image:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
       packages: write
 
     steps:
@@ -34,12 +34,25 @@ jobs:
 
       - name: Get latest version
         id: version
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [ -n "${{ inputs.target_version }}" ]; then
-            VERSION="${{ inputs.target_version }}"
+            SOURCE_VERSION="${{ inputs.target_version }}"
           else
-            VERSION=$(curl -s https://api.github.com/repos/apache/airflow/releases/latest | jq -r '.tag_name' | sed 's/^v//')
+            SOURCE_VERSION=$(gh api 'repos/apache/airflow/releases?per_page=20' --jq '.[] | .tag_name' | while read -r tag; do
+              if [[ "$tag" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                echo "$tag"
+                break
+              fi
+            done)
           fi
+          VERSION="${SOURCE_VERSION#v}"
+          if [ -z "$VERSION" ]; then
+            echo "Failed to resolve Airflow version"
+            exit 1
+          fi
+          echo "source_version=${SOURCE_VERSION}" >> $GITHUB_OUTPUT
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "Detected version: ${VERSION}"
 
@@ -56,6 +69,7 @@ jobs:
       - name: Pull and tag image
         run: |
           VERSION=${{ steps.version.outputs.version }}
+          SOURCE_VERSION=${{ steps.version.outputs.source_version }}
           # Convert to lowercase for ghcr.io
           GHCR_REPO=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           
@@ -63,14 +77,16 @@ jobs:
           docker pull apache/airflow:${VERSION}
           
           # Tag for GHCR
+          docker tag apache/airflow:${VERSION} ghcr.io/${GHCR_REPO}:${SOURCE_VERSION}
           docker tag apache/airflow:${VERSION} ghcr.io/${GHCR_REPO}:${VERSION}
           docker tag apache/airflow:${VERSION} ghcr.io/${GHCR_REPO}:latest
           
           # Push to GHCR only
+          docker push ghcr.io/${GHCR_REPO}:${SOURCE_VERSION}
           docker push ghcr.io/${GHCR_REPO}:${VERSION}
           docker push ghcr.io/${GHCR_REPO}:latest
 
       - name: Output metadata
         run: |
-          echo "source_version=${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "image=ghcr.io/${{ github.repository }}:${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "source_version=${{ steps.version.outputs.source_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "image=ghcr.io/${{ github.repository }}:${{ steps.version.outputs.source_version }}" >> $GITHUB_STEP_SUMMARY
