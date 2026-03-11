@@ -91,7 +91,7 @@ services:
       - /lzcapp/var/data/airflow/config:/opt/airflow/config
     command: "airflow scheduler"
     healthcheck:
-      test: ["CMD-SHELL", "airflow jobs check --job-type SchedulerJob"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8974/health"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -148,7 +148,11 @@ services:
       - /lzcapp/var/data/airflow/config:/opt/airflow/config
     command: "airflow dag-processor"
     healthcheck:
-      test: ["CMD-SHELL", "airflow jobs check --job-type DagProcessorJob --hostname \"$HOSTNAME\""]
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import json,sys,urllib.request; data=json.load(urllib.request.urlopen('http://airflow-api-server:8080/api/v2/monitor/health')); sys.exit(0 if data.get('dag_processor', {}).get('status') == 'healthy' else 1)\"",
+        ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -176,7 +180,11 @@ services:
       - /lzcapp/var/data/airflow/config:/opt/airflow/config
     command: "airflow triggerer"
     healthcheck:
-      test: ["CMD-SHELL", "airflow jobs check --job-type TriggererJob --hostname \"$HOSTNAME\""]
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import json,sys,urllib.request; data=json.load(urllib.request.urlopen('http://airflow-api-server:8080/api/v2/monitor/health')); sys.exit(0 if data.get('triggerer', {}).get('status') == 'healthy' else 1)\"",
+        ]
       interval: 30s
       timeout: 10s
       retries: 5
