@@ -49,7 +49,19 @@ services:
       - /lzcapp/var/data/airflow/logs:/opt/airflow/logs
       - /lzcapp/var/data/airflow/plugins:/opt/airflow/plugins
       - /lzcapp/var/data/airflow/config:/opt/airflow/config
-    command: "bash -lc 'airflow db migrate && exec airflow api-server'"
+    command: >-
+      bash -lc '
+      mkdir -p /opt/airflow/{logs,dags,plugins,config} &&
+      airflow db migrate &&
+      airflow users create
+      --username airflow
+      --password airflow
+      --firstname Airflow
+      --lastname Admin
+      --role Admin
+      --email airflow@example.com || true &&
+      exec airflow api-server
+      '
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8080/api/v2/version"]
       interval: 30s
