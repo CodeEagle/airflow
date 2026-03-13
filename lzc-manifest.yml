@@ -27,7 +27,7 @@ application:
     - AIRFLOW_UID=50000
 services:
   airflow-api-server:
-    image: registry.lazycat.cloud/invokerlaw/codeeagle/airflow:41c9cdeda1c77603
+    image: registry.lazycat.cloud/invokerlaw/codeeagle/airflow:c1fc51d2bdd8064f
     depends_on:
       - postgres
       - redis
@@ -71,7 +71,7 @@ services:
       retries: 5
 
   airflow-scheduler:
-    image: registry.lazycat.cloud/invokerlaw/codeeagle/airflow:41c9cdeda1c77603
+    image: registry.lazycat.cloud/invokerlaw/codeeagle/airflow:c1fc51d2bdd8064f
     depends_on:
       - postgres
       - redis
@@ -100,7 +100,7 @@ services:
       retries: 5
 
   airflow-worker:
-    image: registry.lazycat.cloud/invokerlaw/codeeagle/airflow:41c9cdeda1c77603
+    image: registry.lazycat.cloud/invokerlaw/codeeagle/airflow:c1fc51d2bdd8064f
     depends_on:
       - postgres
       - redis
@@ -134,7 +134,7 @@ services:
       retries: 5
 
   airflow-dag-processor:
-    image: registry.lazycat.cloud/invokerlaw/codeeagle/airflow:41c9cdeda1c77603
+    image: registry.lazycat.cloud/invokerlaw/codeeagle/airflow:c1fc51d2bdd8064f
     depends_on:
       - postgres
       - redis
@@ -166,7 +166,7 @@ services:
       retries: 5
 
   airflow-triggerer:
-    image: registry.lazycat.cloud/invokerlaw/codeeagle/airflow:41c9cdeda1c77603
+    image: registry.lazycat.cloud/invokerlaw/codeeagle/airflow:c1fc51d2bdd8064f
     depends_on:
       - postgres
       - redis
