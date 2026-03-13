@@ -1,4 +1,6 @@
 {
-  "source_version": "3.1.7",
-  "build_version": "3.1.7"
+  "source_version": "airflow-ctl/0.1.2",
+  "build_version": "0.1.2",
+  "build_label": "airflow-ctl/0.1.2@20260313T064534Z",
+  "last_checked_at": "2026-03-13T06:45:34.440218+00:00"
 }
